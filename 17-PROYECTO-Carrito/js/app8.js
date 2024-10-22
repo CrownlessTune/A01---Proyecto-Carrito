@@ -1,79 +1,85 @@
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
-const cartList = document.querySelector('#lista-carrito tbody');
-const clearCartBtn = document.getElementById('vaciar-carrito');
-const addCartBtns = document.querySelectorAll('.agregar-carrito');
+var carritoDeCompras = [];
 
-const addCourseToCart = (course) => {
-    const exists = cart.some(item => item.id === course.id);
-    if (exists) {
-        cart = cart.map(item => {
-            if (item.id === course.id) {
-                item.quantity++;
+var tablaCarrito = document.querySelector('#lista-carrito tbody');
+var botonVaciarCarrito = document.getElementById('vaciar-carrito');
+var botonesAgregarCurso = document.querySelectorAll('.agregar-carrito');
+
+var agregarProductoAlCarrito = function(producto) {
+    var productoExistente = carritoDeCompras.some(function(item) {
+        return item.id === producto.id;
+    });
+
+    if (productoExistente) {
+        carritoDeCompras = carritoDeCompras.map(function(item) {
+            if (item.id === producto.id) {
+                item.cantidad++;
             }
             return item;
         });
     } else {
-        cart.push({ ...course, quantity: 1 });
+        carritoDeCompras.push({ ...producto, cantidad: 1 });
     }
-    updateCart();
+    actualizarVistaCarrito();
 };
 
-const displayCart = () => {
-    cartList.innerHTML = '';
-    cart.forEach(course => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><img src="${course.image}" width="50"></td>
-            <td>${course.name}</td>
-            <td>${course.price}€</td>
-            <td>${course.quantity}</td>
-            <td><a href="#" class="remove-course" data-id="${course.id}">X</a></td>
-        `;
-        cartList.appendChild(row);
+var eliminarProductoDelCarrito = function(productoId) {
+    carritoDeCompras = carritoDeCompras.filter(function(producto) {
+        return producto.id !== productoId;
     });
-    addRemoveEventListeners(); 
+    actualizarVistaCarrito();
 };
 
-const updateCart = () => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-    displayCart();
+var actualizarVistaCarrito = function() {
+    tablaCarrito.innerHTML = '';
+    carritoDeCompras.forEach(function(producto) {
+        var fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td><img src="${producto.imagen}" width="50"></td>
+            <td>${producto.nombre}</td>
+            <td>${producto.precio}€</td>
+            <td>${producto.cantidad}</td>
+            <td><a href="#" class="eliminar-producto" data-id="${producto.id}">X</a></td>
+        `;
+        tablaCarrito.appendChild(fila);
+    });
+    asignarEventosEliminar();
 };
 
-const addRemoveEventListeners = () => {
-    const removeCourseBtns = document.querySelectorAll('.remove-course');
-    removeCourseBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
+var asignarEventosEliminar = function() {
+    var botonesEliminar = document.querySelectorAll('.eliminar-producto');
+    botonesEliminar.forEach(function(boton) {
+        boton.addEventListener('click', function(e) {
             e.preventDefault();
-            const courseId = parseInt(btn.getAttribute('data-id'));
-            cart = cart.filter(item => item.id !== courseId); 
-            updateCart(); 
+            var productoId = parseInt(boton.getAttribute('data-id'));
+            eliminarProductoDelCarrito(productoId);
         });
     });
 };
 
-addCartBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
+botonesAgregarCurso.forEach(function(boton) {
+    boton.addEventListener('click', function(e) {
         e.preventDefault();
-        const courseCard = btn.closest('.card');
-        const courseId = btn.getAttribute('data-id');
-        const courseName = courseCard.querySelector('h4').textContent;
-        const coursePrice = courseCard.querySelector('.precio').textContent.split(' ')[0];
-        const courseImage = courseCard.querySelector('.imagen-curso').src;
 
-        const course = {
-            id: parseInt(courseId),
-            name: courseName,
-            price: parseFloat(coursePrice),
-            image: courseImage,
+        var tarjetaCurso = boton.closest('.card');
+        var productoId = boton.getAttribute('data-id');
+        var productoNombre = tarjetaCurso.querySelector('h4').textContent;
+        var productoPrecio = tarjetaCurso.querySelector('.precio').textContent.split(' ')[0];
+        var productoImagen = tarjetaCurso.querySelector('.imagen-curso').src;
+
+        var producto = {
+            id: parseInt(productoId),
+            nombre: productoNombre,
+            precio: parseFloat(productoPrecio),
+            imagen: productoImagen,
         };
 
-        addCourseToCart(course);
+        agregarProductoAlCarrito(producto);
     });
 });
 
-clearCartBtn.addEventListener('click', () => {
-    cart = [];
-    updateCart();
+botonVaciarCarrito.addEventListener('click', function() {
+    carritoDeCompras = [];
+    actualizarVistaCarrito();
 });
 
-displayCart();
+actualizarVistaCarrito();
